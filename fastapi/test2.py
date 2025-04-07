@@ -1,21 +1,19 @@
-import os
-import time
-import sys
-import joblib
-from test import get_crop_remedy
-# Include parent dir for model import
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from diseasedetection.main import results,load_models
-from fertilizer.predictor import predict_fertilizer 
 
-def load_fertilizer_model():
-   
-        print("📦 Loading fertilizer model into cache...")
-        fert_model = joblib.load("../fertilizer/fertilizer_predictor.pkl")
-        label_encoders = joblib.load("../fertilizer/label_encoders.pkl")
-        return fert_model,label_encoders
+from crop.main import CropRecommendationLSTM
+import numpy as np
 
 
-model, encoders = load_fertilizer_model()
-fertilizer = predict_fertilizer("Kolhapur", "Red", 50, 30, 20, 6.5, 100, 25, "Wheat",model,encoders)
-print(fertilizer)
+print("\nLoading pre-trained model...")
+
+
+crop_model_instance = CropRecommendationLSTM("crop/crop_data.csv")
+crop_model_instance.load_model("crop/saved_models/crop_recommendation_model.h5")
+
+  
+print("📦 Loading crop recommendation model...")
+
+# Predict using the loaded model
+new_sample_2 = np.array([[75, 45, 55, 28, 55, 6.3, 90]])  # Another example input
+recommended_crop_2 = crop_model_instance.predict_crop(new_sample_2)
+print(f"Recommended Crop: {recommended_crop_2}")
+

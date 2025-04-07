@@ -2,7 +2,8 @@ from google import genai
 import json
 import re
 
-YOUR_API_KEY = "AIzaSyBYkQTlg8E9fytxPsRhejzMnWfXWayzBOg"
+from Credentials import getCredentials
+YOUR_API_KEY = getCredentials()
 client = genai.Client(api_key=YOUR_API_KEY)
 
 def clean_json_output(text):
@@ -13,6 +14,7 @@ def clean_json_output(text):
 def get_crop_remedy(disease: str):
     prompt = f"""
     Give 2 remedies and advice for the plant disease '{disease}' in the following JSON format:
+
 
     {{
       "disease": "<Disease Name and causal organism>",
@@ -52,5 +54,7 @@ def get_crop_remedy(disease: str):
 
 # 🔍 Test
 if __name__ == "__main__":
-    result = get_crop_remedy("apple scab")
+
+    result = get_crop_remedy("tomato blight")
+
     print("Parsed Gemini JSON:\n", json.dumps(result, indent=2))

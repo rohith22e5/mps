@@ -198,3 +198,87 @@ async def fertiliser_recommendations(data: FertilizerRecoRequest):
     }
     print(response)
     return response
+
+from crop.main import CropRecommendationLSTM
+def load_crop_model():
+    if not hasattr(app.state, "crop_model"):
+        print("📦 Loading crop recommendation model into cache...")
+        app.state.crop_model_instance = CropRecommendationLSTM("crop/crop_data.csv")
+        app.state.crop_model_instance.load_model("crop/saved_models/crop_recommendation_model.h5")
+    return app.state.crop_model_instance
+
+# Manual Input for Crop Prediction
+class CropInput(BaseModel):
+    nitrogen: float
+    phosphorus: float
+    potassium: float
+    temperature: float
+    humidity: float
+    ph: float
+    rainfall: float
+
+@app.post("/api/croppred/manual")
+async def get_crop_manual(data: CropInput):
+    try:
+        crop_model = load_crop_model()
+        input_array = np.array([[data.nitrogen, data.phosphorus, data.potassium,
+                                 data.temperature, data.humidity, data.ph, data.rainfall]])
+        crop = crop_model.predict_crop(input_array)
+        soilHealth  = round((data.nitrogen+data.phosphorus+data.potassium)/3,2)
+        return {"recommended_crop": crop,"soilHealth":soilHealth,"moistureLevel":data.humidity,"phLevel":data.ph,"temperature":data.temperature}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# CSV Upload for Batch Crop Prediction
+@app.post("/api/croppred/upload")
+async def get_crop_from_file(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
+
+        crop_model = load_crop_model()
+        predictions = []
+
+        for _, row in df.iterrows():
+            try:
+                input_array = np.array([[row["nitrogen"], row["phosphorus"], row["potassium"],
+                                         row["temperature"], row["humidity"], row["ph"], row["rainfall"]]])
+                crop = crop_model.predict_crop(input_array)
+                predictions.append({
+                    "row": row.to_dict(),
+                    "recommended_crop": crop
+                })
+            except Exception as inner_e:
+                predictions.append({
+                    "row": row.to_dict(),
+                    "error": f"❌ Error: {str(inner_e)}"
+                })
+
+        return {"predictions": predictions}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+class CropRecoRequest(BaseModel):
+    recommended_crop: str
+    moisture: float
+    ph: float
+    temperature: float
+
+from CropRec import get_crop_recommendation_query
+@app.post("/api/croppred/recommendation")
+async def crop_remedy(data: CropRecoRequest):
+    try:
+        response = get_crop_recommendation_query(data.recommended_crop, data.moisture, data.ph, data.temperature)
+
+        response["parameters_used"] = {
+            "recommended_crop": data.recommended_crop,
+            "moisture": data.moisture,
+            "ph": data.ph,
+            "temperature": data.temperature
+        }
+
+        return response
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+

@@ -1,10 +1,8 @@
 import re
 from google import genai
 import json
-
 from Credentials import getCredentials
 YOUR_API_KEY = getCredentials()
-
 client = genai.Client(api_key=YOUR_API_KEY)
 
 def clean_json_output(text):
@@ -77,27 +75,27 @@ def parse_imbalance(text):
             print(f"Error parsing imbalance: {pair} - {str(e)}")
     return result
 
-def get_fertiliser_query(fertilizer_name: str, nitrogen: float, phosphorus: float, potassium: float):
-    prompt = f""" Give a structured fertilizer recommendation for the following:
+def get_crop_recommendation_query(crop_name: str, moisture: float, ph: float, temperature: float):
+    prompt = f""" Give a structured crop recommendation for:
 
-Fertilizer: {fertilizer_name}
-Nutrient Levels:
-- Nitrogen: {nitrogen}
-- Phosphorus: {phosphorus}
-- Potassium: {potassium}
+Crop: {crop_name}
+Environmental Conditions:
+- Moisture: {moisture}
+- pH: {ph}
+- Temperature: {temperature}
 
-I want the output strictly in this format:
+Format output as:
 
-Fertilizer: <Fertilizer Name>
-Dosage: <Application dosage and frequency>
-Best Practices: <How to apply the fertilizer>
-Warnings: <Warnings or side-effects>
+Crop: <Crop Name>
+Growth Tips: <Tips for better yield>
+Climate Suitability: <Details>
+Warnings: <Precautions>
 Trends: Jan-0, Feb-0, Mar-15, Apr-15, May-15
 Seasonal Requirements: Spring-33, Summer-33, Autumn-33, Winter-0
 Nutrient Distribution: Nitrogen-38, Phosphorus-23, Potassium-15
 Nutrient Imbalance: Nitrogen-50, Phosphorus-30, Potassium-20
 
-Please use only numeric values (no text or percentages) for all the data points in Trends, Seasonal Requirements, Nutrient Distribution, and Nutrient Imbalance.
+Use only numeric values (no text or % signs) for trends and nutrient data.
 """
 
     try:
@@ -105,43 +103,31 @@ Please use only numeric values (no text or percentages) for all the data points 
             model="gemini-2.0-flash-lite",
             contents=prompt
         )
-        print("Raw Gemini Output:\n", response.text)
-        
-        # Extract sections more robustly
+        print("Raw Gemini Crop Output:\n", response.text)
+
         text = response.text.strip()
-        sections = {}
-        
-        # Extract each section
-        fertilizer_match = re.search(r'Fertilizer:\s*(.*?)(?:\n|$)', text)
-        dosage_match = re.search(r'Dosage:\s*(.*?)(?:\n|$)', text)
-        practices_match = re.search(r'Best Practices:\s*(.*?)(?:\n|$)', text)
+
+        # Parse sections using regex or keyword-based slicing as needed
+        crop_match = re.search(r'Crop:\s*(.*?)(?:\n|$)', text)
+        tips_match = re.search(r'Growth Tips:\s*(.*?)(?:\n|$)', text)
+        climate_match = re.search(r'Climate Suitability:\s*(.*?)(?:\n|$)', text)
         warnings_match = re.search(r'Warnings:\s*(.*?)(?:\n|$)', text)
         trends_match = re.search(r'Trends:\s*(.*?)(?:\n|$)', text)
         seasonal_match = re.search(r'Seasonal Requirements:\s*(.*?)(?:\n|$)', text)
         distribution_match = re.search(r'Nutrient Distribution:\s*(.*?)(?:\n|$)', text)
         imbalance_match = re.search(r'Nutrient Imbalance:\s*(.*?)(?:\n|$)', text)
-        
+
         return {
-            "fertilizer": {"name": fertilizer_match.group(1).strip() if fertilizer_match else fertilizer_name},
-            "dosage": dosage_match.group(1).strip() if dosage_match else "",
-            "bestPractices": practices_match.group(1).strip() if practices_match else "",
+            "bestCrops": crop_match.group(1).strip() if crop_match else crop_name,
+            "growthTips": tips_match.group(1).strip() if tips_match else "",
+            "climateSuitability": climate_match.group(1).strip() if climate_match else "",
             "warnings": warnings_match.group(1).strip() if warnings_match else "",
             "trendsData": parse_trends(trends_match.group(1)) if trends_match else [],
             "seasonalRequirements": parse_seasonal(seasonal_match.group(1)) if seasonal_match else [],
             "nutrientDistribution": parse_distribution(distribution_match.group(1)) if distribution_match else [],
             "nutrientImbalance": parse_imbalance(imbalance_match.group(1)) if imbalance_match else [],
-            "npk_values": {
-                "n": nitrogen,
-                "p": phosphorus,
-                "k": potassium
-            }
         }
-        
-    except Exception as e:
-        print(f"Error in get_fertiliser_query: {str(e)}")
-        return {"error": str(e), "npk_values": {"n": nitrogen, "p": phosphorus, "k": potassium}}
 
-# Example test
-if __name__ == "__main__":
-    result = get_fertiliser_query("Urea", 80, 40, 60)
-    print("Parsed Fertilizer JSON:\n", json.dumps(result, indent=2))
+    except Exception as e:
+        print(f"Error in get_crop_recommendation_query: {str(e)}")
+        return {"error": str(e)}

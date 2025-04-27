@@ -88,16 +88,47 @@ export default function Fertiliser({ login }) {
     fetchData();
   }, [analysisData]);
   
+  function soilHealthScore(n, p, k) {
+    // Ideal range
+    const optimalMin = 40;
+    const optimalMax = 70;
+  
+    // Scoring function
+    const score = (value) => {
+      if (value >= optimalMin && value <= optimalMax) return 1.0;
+      if ((value >= 30 && value < optimalMin) || (value > optimalMax && value <= 80)) return 0.7;
+      if ((value >= 20 && value < 30) || (value > 80 && value <= 90)) return 0.4;
+      return 0.1;
+    };
+  
+    // Individual scores
+    const nScore = score(n);
+    const pScore = score(p);
+    const kScore = score(k);
+  
+    const avgNpkScore = (nScore + pScore + kScore) / 3;
+  
+    // Standard deviation for balance
+    const mean = (n + p + k) / 3;
+    const variance = ((n - mean) ** 2 + (p - mean) ** 2 + (k - mean) ** 2) / 3;
+    const stdDev = Math.sqrt(variance);
+  
+    const balancePenalty = Math.max(0, 1 - stdDev / 50);
+  
+    // Final health score
+    const healthScore = 100 * (0.7 * avgNpkScore + 0.3 * balancePenalty);
+    return parseFloat(healthScore.toFixed(2));
+  }
   
 
   const finalAnalysis = analysisData && analysisData.nitrogen !== undefined
   ? {
       ...analysisData,
-      soilHealth: (
-        (parseFloat(analysisData.nitrogen || 0) +
-         parseFloat(analysisData.phosphorus || 0) +
-         parseFloat(analysisData.potassium || 0)) / 3
-      ).toFixed(2),
+      soilHealth: soilHealthScore(
+        parseFloat(analysisData.nitrogen || 0),
+         parseFloat(analysisData.phosphorus || 0),
+         parseFloat(analysisData.potassium || 0) 
+      ),
       npk: {
         n: analysisData.nitrogen,
         p: analysisData.phosphorus,

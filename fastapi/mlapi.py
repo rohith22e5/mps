@@ -9,6 +9,11 @@ import sys
 import joblib
 from test import get_crop_remedy
 from fert import get_fertiliser_query
+from fastapi import UploadFile, File
+import pandas as pd
+import numpy as np
+import io
+import pdfplumber
 # Include parent dir for model import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from diseasedetection.main import results,load_models
@@ -62,6 +67,36 @@ def load_cached_models():
 
     return app.state.model1, app.state.model2
 
+def soil_health_score(n, p, k):
+    # Ideal range (can be adjusted based on soil/crop type)
+    optimal_min = 40
+    optimal_max = 70
+
+    # Nutrient quality scoring
+    def score(value):
+        if optimal_min <= value <= optimal_max:
+            return 1.0
+        elif 30 <= value < optimal_min or optimal_max < value <= 80:
+            return 0.7
+        elif 20 <= value < 30 or 80 < value <= 90:
+            return 0.4
+        else:
+            return 0.1
+
+    # Individual nutrient scores
+    n_score = score(n)
+    p_score = score(p)
+    k_score = score(k)
+
+    avg_npk_score = (n_score + p_score + k_score) / 3
+
+    # Balance penalty based on standard deviation
+    std_dev = np.std([n, p, k])
+    balance_penalty = max(0, 1 - (std_dev / 50))  # Normalize std dev
+
+    # Final health score
+    health_score = 100 * (0.7 * avg_npk_score + 0.3 * balance_penalty)
+    return round(health_score, 2)
 
 @app.post("/api/analysis")
 async def analyze(request: AnalysisRequest):
@@ -136,16 +171,36 @@ async def get_fertilizer_manual(data: FertilizerInput):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-from fastapi import UploadFile, File
-import pandas as pd
-import numpy as np
-import io
+
 
 @app.post("/api/fertiliser/upload")
 async def get_fertilizer_from_file(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        df = pd.read_csv(io.BytesIO(contents))
+
+        # Read PDF using pdfplumber
+        with pdfplumber.open(io.BytesIO(contents)) as pdf:
+            tables = []
+            for page in pdf.pages:
+                table = page.extract_table()
+                if table:
+                    tables.append(table)
+
+        if not tables:
+            return JSONResponse(status_code=400, content={"error": "No table found in PDF."})
+
+        # Flatten all tables into one DataFrame
+        all_data = []
+        for table in tables:
+            headers = table[0]
+            for row in table[1:]:
+                data = dict(zip(headers, row))
+                all_data.append(data)
+
+        df = pd.DataFrame(all_data)
+
+        # Optional: Clean column names
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
         model, label_encoders = load_fertilizer_model()
         recommendations = []
@@ -155,12 +210,12 @@ async def get_fertilizer_from_file(file: UploadFile = File(...)):
                 fertilizer = predict_fertilizer(
                     district=row["district"],
                     soil_color=row["soil_color"],
-                    nitrogen=row["nitrogen"],
-                    phosphorus=row["phosphorus"],
-                    potassium=row["potassium"],
-                    pH=row["pH"],
-                    rainfall=row["rainfall"],
-                    temperature=row["temperature"],
+                    nitrogen=float(row["nitrogen"]),
+                    phosphorus=float(row["phosphorus"]),
+                    potassium=float(row["potassium"]),
+                    pH=float(row["ph"]),
+                    rainfall=float(row["rainfall"]),
+                    temperature=float(row["temperature"]),
                     crop=row["crop"],
                     model=model,
                     label_encoders=label_encoders
@@ -176,7 +231,12 @@ async def get_fertilizer_from_file(file: UploadFile = File(...)):
                     "error": f"❌ Error: {str(inner_e)}"
                 })
 
-        return {"recommendations": recommendations,"nitrogen":row["nitrogen"],"phosphorus":row["phosphorus"], "potassium":row["potassium"]}
+        return {
+            "recommended_fertilizer": recommendations["recommended_fertilizer"],
+            "nitrogen": row["nitrogen"],
+            "phosphorus": row["phosphorus"],
+            "potassium": row["potassium"]
+        }
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -224,7 +284,7 @@ async def get_crop_manual(data: CropInput):
         input_array = np.array([[data.nitrogen, data.phosphorus, data.potassium,
                                  data.temperature, data.humidity, data.ph, data.rainfall]])
         crop = crop_model.predict_crop(input_array)
-        soilHealth  = round((data.nitrogen+data.phosphorus+data.potassium)/3,2)
+        soilHealth  = soil_health_score(data.nitrogen,data.phosphorus,data.potassium)
         return {"recommended_crop": crop,"soilHealth":soilHealth,"moistureLevel":data.humidity,"phLevel":data.ph,"temperature":data.temperature}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -234,19 +294,53 @@ async def get_crop_manual(data: CropInput):
 async def get_crop_from_file(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        df = pd.read_csv(io.BytesIO(contents))
+
+        # Read PDF using pdfplumber
+        with pdfplumber.open(io.BytesIO(contents)) as pdf:
+            tables = []
+            for page in pdf.pages:
+                table = page.extract_table()
+                if table:
+                    tables.append(table)
+
+        if not tables:
+            return JSONResponse(status_code=400, content={"error": "No table found in PDF."})
+
+        # Combine tables into one DataFrame
+        all_data = []
+        for table in tables:
+            headers = table[0]
+            for row in table[1:]:
+                data = dict(zip(headers, row))
+                all_data.append(data)
+
+        df = pd.DataFrame(all_data)
+
+        # Optional: Clean and normalize column names
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
         crop_model = load_crop_model()
         predictions = []
 
         for _, row in df.iterrows():
             try:
-                input_array = np.array([[row["nitrogen"], row["phosphorus"], row["potassium"],
-                                         row["temperature"], row["humidity"], row["ph"], row["rainfall"]]])
+                nitrogen = float(row["nitrogen"])
+                phosphorus = float(row["phosphorus"])
+                potassium = float(row["potassium"])
+                temperature = float(row["temperature"])
+                humidity = float(row["humidity"])
+                ph = float(row["ph"])
+                rainfall = float(row["rainfall"])
+
+                input_array = np.array([[nitrogen, phosphorus, potassium, temperature, humidity, ph, rainfall]])
                 crop = crop_model.predict_crop(input_array)
+                soilHealth = soil_health_score(data.nitrogen,data.phosphorus,data.potassium)
                 predictions.append({
-                    "row": row.to_dict(),
-                    "recommended_crop": crop
+                    "recommended_crop": crop,
+                    "soilHealth": soilHealth,
+                    "moistureLevel": humidity,
+                    "phLevel": ph,
+                    "temperature": temperature
                 })
             except Exception as inner_e:
                 predictions.append({
@@ -255,9 +349,9 @@ async def get_crop_from_file(file: UploadFile = File(...)):
                 })
 
         return {"predictions": predictions}
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 
 class CropRecoRequest(BaseModel):
     recommended_crop: str

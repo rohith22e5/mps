@@ -1010,6 +1010,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
             >
               <FaShoppingCart className="sidebar-icon" /> Orders
             </button>
+            {/*
             {userInfo.role === 'Farmer' && (
               <button
                 className={`sidebar-btn ${activeTab === 'contributions' ? 'active' : ''}`}
@@ -1017,7 +1018,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
               >
                 <FaSeedling className="sidebar-icon" /> Contributions
               </button>
-            )}
+            )}*/}
             <button
               className={`sidebar-btn ${activeTab === 'settings' ? 'active' : ''}`}
               onClick={() => handleTabChange('settings')}
@@ -1127,6 +1128,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
                       <p>{following}</p>
                     </div>
                   </div>
+                  {/*
                   {userInfo.role === 'Farmer' && (
                     <div className="stat-card">
                       <div className="stat-icon"><FaSeedling /></div>
@@ -1135,7 +1137,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
                         <p>{contributionsLoading ? 'Loading...' : contributions.length}</p>
                       </div>
                     </div>
-                  )}
+                  )}*/}
                 </div>
               </div>
             )}

@@ -6,7 +6,7 @@ const FileUploader = ({ onFileUpload,onDetect }) => {
   const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL;
   const [inputfile, setFile] = useState(null);
   const [filename, setFilename] = useState("");
-  const [isManualInput, setIsManualInput] = useState(false);
+  const [isManualInput, setIsManualInput] = useState(true);
   const fileInputRef = useRef(null);
 
   // 🌱 Manual Input State

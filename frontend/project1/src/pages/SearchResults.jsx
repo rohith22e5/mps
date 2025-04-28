@@ -1,36 +1,54 @@
 import { useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import ProductCard from "./ProductCard";
-const products = [
-    
-      { id: 1, name: 'Fresh Carrots', price: 3, image: '/4.jpg', unit: 'kg', isLiquid: false },
-      { id: 2, name: 'Tomatoes', price: 4, image: '/3.jpg', unit: 'kg', isLiquid: false },
-   
-    
-      { id: 3, name: 'Organic Apples', price: 5, image: '/3.jpg', unit: 'kg', isLiquid: false },
-      { id: 4, name: 'Bananas', price: 2, image: '/5.jpg', unit: 'kg', isLiquid: false },
-    
-   
-      { id: 5, name: 'Dairy Milk', price: 7, image: '/5.jpg', unit: 'Litre', isLiquid: true },
-      { id: 6, name: 'Cheese', price: 10, image: '/4.jpg', unit: 'kg', isLiquid: false },
-    ]
+import axios from "axios";
+import "./Shop.css"; // Assuming you want similar styling
 
 export default function SearchResults() {
     const [searchParams] = useSearchParams();
-    const query = searchParams.get("query")?.toLowerCase() || ""; // Get search query
-    console.log(query);
+    const query = searchParams.get("query")?.toLowerCase() || "";
 
-    // Filter products based on search query
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get('http://localhost:5000/api/shop/products');
+                setProducts(response.data);
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching products:', err);
+                setError('Failed to load products. Please try again later.');
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    // Filter the products according to search query
     const filteredProducts = products.filter((product) =>
         product.name.toLowerCase().includes(query)
     );
+
+    if (loading) {
+        return <div className="loading">Loading search results...</div>;
+    }
+
+    if (error) {
+        return <div className="error">{error}</div>;
+    }
 
     return (
         <div className="search-results-container">
             <h2>Search Results for "{query}"</h2>
             {filteredProducts.length > 0 ? (
-                <div className="products-grid">
+                <div className="product-grid">
                     {filteredProducts.map((product) => (
-                       <ProductCard key={product.id} product={product}/> 
+                        <ProductCard key={product._id} product={product} />
                     ))}
                 </div>
             ) : (

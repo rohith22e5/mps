@@ -16,7 +16,7 @@ const tutorialsList = [
   },
   {
     title: "Smart Irrigation Techniques",
-    video:"https://www.youtube.com/embed/dxRY0Mpejgk",
+    video: "https://www.youtube.com/embed/dxRY0Mpejgk",
     description: "Optimize water usage with smart irrigation.",
     category: "Irrigation",
   },
@@ -32,7 +32,99 @@ const tutorialsList = [
     description: "Intro to handling and maintaining equipment.",
     category: "Equipment",
   },
+  // New Tutorials you gave:
+  {
+    title: "Organic Farming Practices",
+    video: "https://www.youtube.com/embed/n7nG-gHcv4I?si=opbbxjFiB-oPP3JK",
+    description: "Learn about sustainable organic farming techniques.",
+    category: "Soil Health",
+  },
+  {
+    title: "Integrated Pest Management",
+    video: "https://www.youtube.com/embed/VaDccWJJ864?si=dKUVpYGkecPTA2CA",
+    description: "Combining biological, cultural, and chemical tools for pest control.",
+    category: "Pest Control",
+  },
+  {
+    title: "Efficient Water Management",
+    video: "https://www.youtube.com/embed/W6E_MyVjQX4?si=tYltNulgeRx6_oPi",
+    description: "Best practices for water conservation and irrigation.",
+    category: "Irrigation",
+  },
+  {
+    title: "Advanced Fertilizer Application",
+    video: "https://www.youtube.com/embed/Z9HAy9EYKKs?si=1zgqFUbZm2WPrrSy",
+    description: "How to apply fertilizers for maximum crop yield.",
+    category: "Fertilization",
+  },
+  {
+    title: "Farm Machinery Maintenance",
+    video: "https://www.youtube.com/embed/rXT5HwH-l9w?si=x8FRW4sGlz8_5GbD",
+    description: "Keep your farming equipment in top shape.",
+    category: "Equipment",
+  },
+  {
+    title: "Vermicomposting Techniques",
+    video: "https://www.youtube.com/embed/Ulf8E1XnhgI?si=LcKXMD77vdqQ6NmE",
+    description: "Use worms to improve soil fertility naturally.",
+    category: "Soil Health",
+  },
+  {
+    title: "Eco-friendly Pest Repellents",
+    video: "https://www.youtube.com/embed/Lm4p_ZfZGhk?si=FH8YCWZSeI7BFe56",
+    description: "Make and use organic pest repellents.",
+    category: "Pest Control",
+  },
+  {
+    title: "Drip Irrigation Systems",
+    video: "https://www.youtube.com/embed/05ITJlgPcR0?si=PYp_MhMSSKnyGRM3",
+    description: "Introduction to efficient drip irrigation setup.",
+    category: "Irrigation",
+  },
+  {
+    title: "Micronutrient Fertilization",
+    video: "https://www.youtube.com/embed/Ua3rEqUe_EQ?si=hiW0FxLdnsQbmx3a",
+    description: "Understanding the role of micronutrients in farming.",
+    category: "Fertilization",
+  },
+  {
+    title: "Tractor Safety Tips",
+    video: "https://www.youtube.com/embed/A8qTRBc8Bws?si=OLpEsGWbQQtL2zBO",
+    description: "Operate tractors safely and effectively.",
+    category: "Equipment",
+  },
+  {
+    title: "Composting for Healthy Soil",
+    video: "https://www.youtube.com/embed/8ulpy_GFLDk?si=RJZWYX02wjgOymNc",
+    description: "How to create nutrient-rich compost for your farm.",
+    category: "Soil Health",
+  },
+  {
+    title: "Biological Pest Control",
+    video: "https://www.youtube.com/embed/wRrWDPiV2Cc?si=VmgYvjPRwWnCdMqo",
+    description: "Use natural predators to manage pests.",
+    category: "Pest Control",
+  },
+  {
+    title: "Rainwater Harvesting for Farms",
+    video: "https://www.youtube.com/embed/V2tQv5xi5t8?si=7y0X48g2IaSkDZQS",
+    description: "Store rainwater for agricultural use efficiently.",
+    category: "Irrigation",
+  },
+  {
+    title: "Organic Fertilizer Preparation",
+    video: "https://www.youtube.com/embed/jJkssgc4wqc?si=cFBoOlwI__LkWP3S",
+    description: "Make organic fertilizers at home.",
+    category: "Fertilization",
+  },
+  {
+    title: "Small Farm Equipment Guide",
+    video: "https://www.youtube.com/embed/5RQU2V1CCAk?si=fvJ1kd5VEr6TulYq",
+    description: "Choosing the right small equipment for your farm.",
+    category: "Equipment",
+  },
 ];
+
 
 export default function Tutorials({ login }) {
   const [searchQuery, setSearchQuery] = useState("");

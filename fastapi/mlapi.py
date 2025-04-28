@@ -116,10 +116,9 @@ async def analyze(request: AnalysisRequest):
         # Perform analysis
        
         prediction = results(filepath,model1,model2)
-       
-        crop, disease = prediction.strip().split(" ")
-       
-
+        parts = prediction.strip().split(" ")
+        crop = parts[0]
+        disease = " ".join(parts[1:])
         return {
             "severity": 60,
             "confidence": 70,

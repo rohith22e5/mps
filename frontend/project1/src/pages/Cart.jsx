@@ -312,6 +312,40 @@ const Cart = () => {
     }
   };
 
+  const handlePayment = async (amount) => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      key: "YOUR_RAZORPAY_KEY_ID", // Get from Razorpay dashboard
+      amount: amount * 100, // Razorpay takes amount in paise
+      currency: "INR",
+      name: "Agro Marketplace",
+      description: "Secure Checkout",
+      handler: function (response) {
+        // Payment succeeded
+        console.log("Payment success:", response);
+        resolve(response);
+      },
+      prefill: {
+        name: "Customer Name",
+        email: "customer@example.com",
+        contact: "9999999999"
+      },
+      theme: {
+        color: "#4CAF50"
+      }
+    };
+
+    const razorpay = new window.Razorpay(options);
+
+    razorpay.on("payment.failed", function (response) {
+      console.error("Payment failed:", response.error);
+      reject(new Error("Payment failed or was cancelled"));
+    });
+
+    razorpay.open();
+  });
+};
+
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
       showNotification("Your cart is empty!");
@@ -336,6 +370,13 @@ const Cart = () => {
       
       // Create a copy of the cart items before clearing
       const itemsForOrder = [...orderItems];
+     /* try {
+    await handlePayment(total); // ← Razorpay payment happens here  
+  } catch (paymentError) {
+    showNotification(paymentError.message || "Payment failed or cancelled");
+    return; // Abort checkout
+  }*/
+
       
       if (isLocalMode) {
         // Handle checkout in local mode - create a dummy order

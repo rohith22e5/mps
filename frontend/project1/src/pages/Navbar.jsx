@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../api/axios";
 
 function Navbar({ login, user, setLogin, setUser, ToFooter, ToFeatures }) {
   useEffect(() => {
@@ -25,7 +25,7 @@ function Navbar({ login, user, setLogin, setUser, ToFooter, ToFeatures }) {
             Authorization: `Bearer ${token}`
           }
         };
-        await axios.post("http://localhost:5000/api/auth/logout", {}, config);
+        await axios.post("/auth/logout", {}, config);
       }
     } catch (error) {
       console.error("Logout API error:", error);

@@ -47,12 +47,13 @@ router.post('/update-profile-image', protect, upload.single('profileImage'), asy
     }
 
     // Get the file path
-    const profileImage = `/uploads/profiles/${req.file.filename}`;
+    const avatar = `/uploads/profiles/${req.file.filename}`;
+    const fullUrl = `${req.protocol}://${req.get('host')}${avatar}`;
 
     // Update user profile in database with new image
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { profileImage },
+      { avatar },
       { new: true }
     );
 
@@ -63,7 +64,7 @@ router.post('/update-profile-image', protect, upload.single('profileImage'), asy
     res.json({
       success: true,
       message: 'Profile image updated successfully',
-      profileImage
+      avatar: avatar
     });
   } catch (error) {
     console.error('Error updating profile image:', error);

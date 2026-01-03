@@ -4,6 +4,7 @@ import FertilizerResults from "./FertiliserResults"
 import FertilizerRec from "./FertiliserRecommendations"
 import IExa from "/images.jpg"
 import { useState, useEffect } from "react";
+import PYTHON_API_URL from "../../api/python.js";
 
 export default function Fertiliser({ login }) {
   const fallbackData = {
@@ -63,7 +64,7 @@ export default function Fertiliser({ login }) {
   
     const fetchData = async () => {
       try {
-        const fertrec = await fetch(`http://localhost:8000/api/fertiliser/recommendation`, {
+        const fertrec = await fetch(`${PYTHON_API_URL}/fertiliser/recommendation`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

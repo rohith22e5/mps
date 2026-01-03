@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api/axios';
 import './Shop.css';
 import { useShop } from '../context/ShopContext';
 
@@ -164,7 +164,7 @@ const ProductCard = ({ product }) => {
         // First make sure the product exists and is available
         try {
           const productCheck = await axios.get(
-            `http://localhost:5000/api/shop/products/${product._id}`, 
+            `/shop/products/${product._id}`, 
             config
           );
           console.log('Product verified:', productCheck.data);
@@ -183,7 +183,7 @@ const ProductCard = ({ product }) => {
         console.log('Sending cart data:', cartData);
         
         const response = await axios.post(
-          'http://localhost:5000/api/shop/cart/items', 
+          '/shop/cart/items', 
           cartData,
           config
         );

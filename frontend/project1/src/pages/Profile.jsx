@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaEdit, FaBox, FaShoppingBag, FaCalendarAlt, FaHome, FaList, FaCog, FaUser, FaShoppingCart, FaHeart, FaSeedling, FaPhone, FaShoppingBasket, FaUsers } from "react-icons/fa"; 
-import axios from "axios";
+import axios from "../api/axios";
 import "./Profile.css"; // Import the CSS file
 import { useShop } from "../context/ShopContext";
 import CustomNotification from "../components/CustomNotification";
@@ -109,16 +109,23 @@ export default function Profile({ login, setLogin, user, setUser }) {
         };
         
         // Fetch user profile from API
-        const userResponse = await axios.get("http://localhost:5000/api/auth/profile", config);
+        const userResponse = await axios.get("/auth/profile", config);
         
         if (userResponse.data) {
           // Format user data
+          const backendUrl = 'http://localhost:5000';
+          let avatar = userResponse.data.avatar;
+          if (avatar && !avatar.startsWith('http')) {
+              avatar = `${backendUrl}/${avatar.replace(/\\/g, '/')}`;
+          }
+
           const userData = {
             _id: userResponse.data._id,
             username: userResponse.data.username,
             name: userResponse.data.username, // Use username as display name
             email: userResponse.data.email,
-            avatar: userResponse.data.avatar || "/1.png",
+            avatar: avatar,
+
             mobile: userResponse.data.mobile || "",
             role: "Farmer", // Set role to Farmer for all users to enable contributions
             // Extract address fields
@@ -287,7 +294,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
       // Use the same endpoint as the social profile page
       try {
         // Get social profile data from the API - this is the same endpoint used by the social profile
-        const socialResponse = await axios.get("http://localhost:5000/api/social/profile/me", config);
+        const socialResponse = await axios.get("/social/profile/me", config);
         
         if (socialResponse.data) {
           const socialData = socialResponse.data;
@@ -372,7 +379,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
       
       // Send the update request to backend
       const response = await axios.put(
-        "http://localhost:5000/api/auth/profile/update", 
+        "/auth/profile/update", 
         updateData,
         config
       );
@@ -417,7 +424,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
       
       // Send the update request to backend
       const response = await axios.put(
-        "http://localhost:5000/api/auth/profile/update",
+        "/auth/profile/update",
         updateData,
         config
       );
@@ -473,7 +480,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
       
       // Send the update request to backend
       const response = await axios.put(
-        "http://localhost:5000/api/auth/profile/update",
+        "/auth/profile/update",
         updateData,
         config
       );
@@ -504,7 +511,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
         };
         
         // Call logout API
-        await axios.post("http://localhost:5000/api/auth/logout", {}, config);
+        await axios.post("/auth/logout", {}, config);
       }
     } catch (error) {
       console.error("Error during logout:", error);
@@ -556,17 +563,17 @@ export default function Profile({ login, setLogin, user, setUser }) {
       
       // Upload profile image
       const response = await axios.post(
-        "http://localhost:5000/api/users/update-profile-image",
+        "/users/update-profile-image",
         formData,
         config
       );
       
       if (response.data && response.data.success) {
-        const avatarUrl = `http://localhost:5000${response.data.profileImage}`;
+        const avatarUrl = response.data.avatar;
         
         // Update user profile in backend with new avatar URL
         const updateResponse = await axios.put(
-          "http://localhost:5000/api/auth/profile/update",
+          "/auth/profile/update",
           { avatar: avatarUrl },
           {
             headers: {
@@ -662,7 +669,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
       
       // Send the update request to backend
       const response = await axios.put(
-        "http://localhost:5000/api/auth/profile/password",
+        "/auth/profile/password",
         updateData,
         config
       );
@@ -727,11 +734,11 @@ export default function Profile({ login, setLogin, user, setUser }) {
       };
       
       console.log("Making API call to fetch contributions");
-      console.log("API URL:", "http://localhost:5000/api/products");
+      console.log("API URL:", "/products");
       console.log("Headers:", JSON.stringify(config));
       
       // Get farmer contributions from API
-      const response = await axios.get("http://localhost:5000/api/products", config);
+      const response = await axios.get("/products", config);
       
       console.log("API Response for contributions:", response);
       
@@ -825,7 +832,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
       };
       
       const response = await axios.post(
-        "http://localhost:5000/api/products",
+        "/products",
         productData,
         config
       );
@@ -902,7 +909,7 @@ export default function Profile({ login, setLogin, user, setUser }) {
       
       // Send delete request with proper headers
       const response = await axios.delete(
-        `http://localhost:5000/api/products/${id}`,
+        `/products/${id}`,
         { 
           headers: { 
             Authorization: `Bearer ${token}` 
@@ -1039,9 +1046,14 @@ export default function Profile({ login, setLogin, user, setUser }) {
                 </div>
               )}
               <img
-                src={userInfo.avatar || "https://via.placeholder.com/150"}
+                src={userInfo.avatar}
                 alt="Profile"
                 style={{ opacity: avatarLoading ? 0.5 : 1 }}
+                onError={(e) => {
+                  console.error("Failed to load profile image:", e.target.src);
+                  e.target.onerror = null;
+                  e.target.src = "https://via.placeholder.com/150";
+                }}
               />
               <div className="edit-avatar-icon" onClick={handleAvatarClick}>
                 <FaEdit />

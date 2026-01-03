@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import Notification from '../components/Notification';
-import axios from 'axios';
+import axios from '../api/axios';
 
 // Create the context
 const ShopContext = createContext();
@@ -46,7 +46,7 @@ export const ShopProvider = ({ children }) => {
       try {
         // Add timeout of 2 seconds for faster fallback
         const response = await Promise.race([
-          axios.get('http://localhost:5000/api/shop/orders', config),
+          axios.get('/shop/orders', config),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('API timeout')), 2000)
           )
@@ -156,7 +156,7 @@ export const ShopProvider = ({ children }) => {
       };
       
       try {
-        const response = await axios.get(`http://localhost:5000/api/shop/orders/${orderId}`, config);
+        const response = await axios.get(`/shop/orders/${orderId}`, config);
         return response.data;
       } catch (apiError) {
         console.error(`API error fetching order ${orderId}:`, apiError);

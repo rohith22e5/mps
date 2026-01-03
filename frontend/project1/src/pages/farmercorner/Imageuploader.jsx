@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { FiUploadCloud, FiCamera } from "react-icons/fi";
+import PYTHON_API_URL from "../../api/python.js";
 
 const ImageUploader = ({ onImageUpload, onDetect,buttonname }) => {
   const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL;
@@ -90,7 +91,7 @@ const ImageUploader = ({ onImageUpload, onDetect,buttonname }) => {
     };
   
     try {
-      const response = await fetch("http://localhost:8000/api/analysis", {
+      const response = await fetch(`${PYTHON_API_URL}/analysis`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

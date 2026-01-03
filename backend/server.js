@@ -7,6 +7,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fs from 'fs';
+import helmet from 'helmet';
+import winston from 'winston';
+import mongoSanitize from 'express-mongo-sanitize';
+import xss from 'xss-clean';
+import hpp from 'hpp';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -27,6 +32,34 @@ const app = express();
 // Connect to database
 connectDB();
 
+// Logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
+}
+
+// Security middleware
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  })
+);
+
+app.use(mongoSanitize());
+app.use(xss());
+app.use(hpp());
+
+
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -46,25 +79,33 @@ const limiter = rateLimit({
 app.use('/api/auth', limiter);
 app.use('/api/admin', limiter);
 
-// Security middleware
+// CORS configuration
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    
+];
+
+if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
     origin: function(origin, callback) {
-        // Allow all origins for now during development
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:5173',
-            'http://localhost:5174',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:5173',
-            'http://127.0.0.1:5174'
-        ];
-        
-        // Allow requests with no origin (like mobile apps, curl, or Postman)
+        if (process.env.NODE_ENV !== 'production') {
+            // Allow all origins in development
+            return callback(null, true);
+        }
+        // allow requests with no origin (like mobile apps or curl requests)
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            console.log("Origin rejected:", origin);
-            callback(null, true); // Allow all origins in development
+            callback(new Error('Not allowed by CORS'));
         }
     },
     credentials: true,
@@ -72,13 +113,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// Add logging middleware
+// Request logging
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    console.log('Headers:', JSON.stringify(req.headers));
-    if (req.body && Object.keys(req.body).length > 0) {
-        console.log('Body:', JSON.stringify(req.body));
-    }
+    logger.info(`${req.method} ${req.url}`, {
+        headers: req.headers,
+        body: req.body
+    });
     next();
 });
 
@@ -86,6 +126,9 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -96,7 +139,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 
 // Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads', 'profiles');
@@ -105,9 +148,24 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Health check route
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+    const frontendPath = path.resolve(__dirname, '..', 'frontend', 'project1', 'dist');
+    
+    if (fs.existsSync(frontendPath)) {
+        app.use(express.static(frontendPath));
+
+        app.get('*', (req, res) => {
+            res.sendFile(path.resolve(frontendPath, 'index.html'));
+        });
+    } else {
+        logger.warn("Frontend build not found. Run 'npm run build' in the frontend directory.");
+    }
+}
 
 // Error Handling
 app.use(errorHandler);
@@ -115,5 +173,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 }); 

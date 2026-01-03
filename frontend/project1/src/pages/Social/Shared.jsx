@@ -3,7 +3,7 @@ import PostCard from "./PostCard";
 import "./Feed.css";
 import "./SharedPosts.css"
 import { ArrowRight, Share, User, RefreshCw } from "lucide-react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 
 // Keeps the dummy friends as a fallback
@@ -57,7 +57,7 @@ const SharedContent = () => {
             };
             
             // Fetch posts
-            const postsResponse = await axios.get("http://localhost:5000/api/social/posts", config);
+            const postsResponse = await axios.get("/social/posts", config);
             const { posts: realPosts, dummyPosts } = postsResponse.data;
             
             // Get the current user ID to check like status
@@ -82,12 +82,12 @@ const SharedContent = () => {
             
             // Try to fetch followers first
             try {
-                const followersResponse = await axios.get('http://localhost:5000/api/social/followers', config);
+                const followersResponse = await axios.get('/social/followers', config);
                 if (followersResponse.data && followersResponse.data.length > 0) {
                     setFriends(followersResponse.data);
                 } else {
                     // Fall back to friends if no followers
-                    const friendsResponse = await axios.get("http://localhost:5000/api/social/friends", config);
+                    const friendsResponse = await axios.get("/social/friends", config);
                     const { friends: realFriends, dummyFriends } = friendsResponse.data;
                     
                     // If we have real friends, use them, otherwise use dummy friends
@@ -102,7 +102,7 @@ const SharedContent = () => {
             } catch (err) {
                 console.error("Error fetching followers:", err);
                 // Fallback to friends
-                const friendsResponse = await axios.get("http://localhost:5000/api/social/friends", config);
+                const friendsResponse = await axios.get("/social/friends", config);
                 const { friends: realFriends, dummyFriends } = friendsResponse.data;
                 
                 if (realFriends && realFriends.length > 0) {
@@ -115,7 +115,7 @@ const SharedContent = () => {
             }
             
             // Fetch shared posts
-            const sharedPostsResponse = await axios.get("http://localhost:5000/api/social/shared", config);
+            const sharedPostsResponse = await axios.get("/social/shared", config);
             const { sharedPosts: realSharedPosts, dummySharedPosts } = sharedPostsResponse.data;
             
             // Process shared posts to determine if current user has liked them
@@ -196,7 +196,7 @@ const SharedContent = () => {
             
             if (isRealPost) {
                 // Call API for real posts
-                const response = await axios.post(`http://localhost:5000/api/social/posts/${postId}/like`, {}, config);
+                const response = await axios.post(`/social/posts/${postId}/like`, {}, config);
                 
                 // Update post in state with the updated likes array from the server
                 setSharedPosts(prevPosts => prevPosts.map(post => {
@@ -280,7 +280,7 @@ const SharedContent = () => {
             if (isRealPost) {
                 // Call API for real posts
                 const response = await axios.post(
-                    `http://localhost:5000/api/social/posts/${postId}/comment`,
+                    `/social/posts/${postId}/comment`,
                     { text: commentText },
                     config
                 );
@@ -345,7 +345,7 @@ const SharedContent = () => {
             if (isRealPost) {
                 // Call API for real posts
                 await axios.post(
-                    `http://localhost:5000/api/social/posts/${postId}/share`,
+                    `/social/posts/${postId}/share`,
                     { friendIds, sharedWith: friendNames },
                     config
                 );

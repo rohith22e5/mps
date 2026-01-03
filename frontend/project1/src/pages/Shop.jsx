@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Shop.css';
 import ProductCard from './ProductCard';
-import axios from 'axios';
+import axios from '../api/axios';
 
 export default function Shop({ login }) {
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ export default function Shop({ login }) {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5000/api/shop/products');
+        const response = await axios.get('/shop/products');
         
         // Organize products by category
         const categorizedProducts = {

@@ -7,6 +7,7 @@ import {
     getCart, 
     updateCartItem, 
     removeFromCart,
+    createOrder,
     getProductsByCategory
 } from '../controllers/shopController.js';
 
@@ -30,5 +31,9 @@ router.route('/cart/items')
 router.route('/cart/items/:itemId')
     .put(updateCartItem)
     .delete(removeFromCart);
+
+// Order routes
+router.route('/orders')
+    .post(createOrder);
 
 export default router; 

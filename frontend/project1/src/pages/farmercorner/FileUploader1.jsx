@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { FiUploadCloud } from "react-icons/fi";
 import { MdOutlineFilePresent } from "react-icons/md";
+import PYTHON_API_URL from "../../api/python.js";
 
 const FileUploader1 = ({ onFileUpload,onDetect }) => {
   const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL;
@@ -77,7 +78,7 @@ const FileUploader1 = ({ onFileUpload,onDetect }) => {
     try {
       const pl = JSON.stringify(formData)
       console.log(pl)
-      const response = await fetch("http://localhost:8000/api/croppred/manual", {
+      const response = await fetch(`${PYTHON_API_URL}/croppred/manual`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +114,7 @@ const FileUploader1 = ({ onFileUpload,onDetect }) => {
       const formData = new FormData();
       formData.append("file", blob, filename);
   
-      const response = await fetch("http://localhost:8000/api/croppred/upload", {
+      const response = await fetch(`${PYTHON_API_URL}/croppred/upload`, {
         method: "POST",
         body: formData,
       });

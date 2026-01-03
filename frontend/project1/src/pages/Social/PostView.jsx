@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../api/axios";
 import PostCard from "./PostCard";
 import "./Feed.css";
 import "./Postcard.css";
@@ -32,7 +32,7 @@ const PostView = () => {
                 };
 
                 // Fetch the specific post
-                const response = await axios.get(`http://localhost:5000/api/social/posts/${postId}`, config);
+                const response = await axios.get(`/social/posts/${postId}`, config);
                 
                 if (!response.data) {
                     throw new Error("Post not found");
@@ -53,7 +53,7 @@ const PostView = () => {
 
                 // Fetch followers (instead of friends)
                 try {
-                    const followersResponse = await axios.get('http://localhost:5000/api/social/followers', config);
+                    const followersResponse = await axios.get('/social/followers', config);
                     if (followersResponse.data && followersResponse.data.length > 0) {
                         setConnections(followersResponse.data);
                     } else {
@@ -92,7 +92,7 @@ const PostView = () => {
             };
 
             // Call API
-            const response = await axios.post(`http://localhost:5000/api/social/posts/${postId}/like`, {}, config);
+            const response = await axios.post(`/social/posts/${postId}/like`, {}, config);
             
             // Get the current user ID
             const userId = localStorage.getItem('userId');
@@ -131,7 +131,7 @@ const PostView = () => {
 
             // Call API
             const response = await axios.post(
-                `http://localhost:5000/api/social/posts/${postId}/comment`,
+                `/social/posts/${postId}/comment`,
                 { text: commentText },
                 config
             );
@@ -170,7 +170,7 @@ const PostView = () => {
             
             // Call API
             await axios.post(
-                `http://localhost:5000/api/social/posts/${postId}/share`,
+                `/social/posts/${postId}/share`,
                 { sharedWith: formattedConnections },
                 config
             );

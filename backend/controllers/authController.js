@@ -3,6 +3,14 @@ import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
 import { registerSchema, loginSchema } from '../validation/authValidation.js';
 import { OAuth2Client } from 'google-auth-library';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Google OAuth client setup
 const client = new OAuth2Client(
@@ -181,13 +189,27 @@ const googleCallback = asyncHandler(async (req, res) => {
                     counter++;
                 }
             }
+
+            let avatarPath = '';
+            if (picture) {
+                try {
+                    const response = await axios.get(picture, { responseType: 'arraybuffer' });
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const filename = `google-profile-${uniqueSuffix}.jpg`;
+                    const imagePath = path.join(__dirname, '..', 'uploads', 'profiles', filename);
+                    fs.writeFileSync(imagePath, response.data);
+                    avatarPath = `/uploads/profiles/${filename}`;
+                } catch (error) {
+                    console.error('Failed to download Google profile picture:', error);
+                }
+            }
             
             user = await User.create({
                 username,
                 email,
                 password,
                 googleId: sub,
-                avatar: picture,
+                avatar: avatarPath,
                 isGoogleUser: true
             });
         } else if (!user.isGoogleUser) {
@@ -196,7 +218,18 @@ const googleCallback = asyncHandler(async (req, res) => {
             // update their account to link with Google
             user.googleId = sub;
             user.isGoogleUser = true;
-            if (picture) user.avatar = picture;
+            if (picture && !user.avatar) {
+                try {
+                    const response = await axios.get(picture, { responseType: 'arraybuffer' });
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const filename = `google-profile-${uniqueSuffix}.jpg`;
+                    const imagePath = path.join(__dirname, '..', 'uploads', 'profiles', filename);
+                    fs.writeFileSync(imagePath, response.data);
+                    user.avatar = `/uploads/profiles/${filename}`;
+                } catch (error) {
+                    console.error('Failed to download Google profile picture:', error);
+                }
+            }
             await user.save();
         } else {
             console.log(`Existing Google user logged in: ${email}`);
@@ -427,13 +460,27 @@ const googleLogin = asyncHandler(async (req, res) => {
                     counter++;
                 }
             }
+
+            let avatarPath = '';
+            if (picture) {
+                try {
+                    const response = await axios.get(picture, { responseType: 'arraybuffer' });
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const filename = `google-profile-${uniqueSuffix}.jpg`;
+                    const imagePath = path.join(__dirname, '..', 'uploads', 'profiles', filename);
+                    fs.writeFileSync(imagePath, response.data);
+                    avatarPath = `/uploads/profiles/${filename}`;
+                } catch (error) {
+                    console.error('Failed to download Google profile picture:', error);
+                }
+            }
             
             user = await User.create({
                 username,
                 email,
                 password,
                 googleId: sub,
-                avatar: picture,
+                avatar: avatarPath,
                 isGoogleUser: true
             });
             
@@ -443,7 +490,18 @@ const googleLogin = asyncHandler(async (req, res) => {
             // update their account to link with Google
             user.googleId = sub;
             user.isGoogleUser = true;
-            if (picture) user.avatar = picture;
+            if (picture && !user.avatar) {
+                try {
+                    const response = await axios.get(picture, { responseType: 'arraybuffer' });
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const filename = `google-profile-${uniqueSuffix}.jpg`;
+                    const imagePath = path.join(__dirname, '..', 'uploads', 'profiles', filename);
+                    fs.writeFileSync(imagePath, response.data);
+                    user.avatar = `/uploads/profiles/${filename}`;
+                } catch (error) {
+                    console.error('Failed to download Google profile picture:', error);
+                }
+            }
             await user.save();
             
             console.log('Linked existing user to Google login:', email);

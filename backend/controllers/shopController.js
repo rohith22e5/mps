@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Product from '../models/productModel.js';
 import Cart from '../models/cartModel.js';
+import Order from '../models/orderModel.js';
 import { cartItemSchema, updateCartItemSchema } from '../validation/shopValidation.js';
 
 // @desc    Get all products
@@ -172,6 +173,31 @@ const removeFromCart = asyncHandler(async (req, res) => {
     res.json(updatedCart);
 });
 
+// @desc    Create a new order
+// @route   POST /api/shop/orders
+// @access  Private
+const createOrder = asyncHandler(async (req, res) => {
+    const { items, totalAmount } = req.body;
+
+    if (items && items.length === 0) {
+        res.status(400);
+        throw new Error('No order items');
+    }
+
+    const order = new Order({
+        user: req.user._id,
+        items,
+        totalAmount,
+    });
+
+    const createdOrder = await order.save();
+
+    // Clear the user's cart after creating the order
+    await Cart.findOneAndUpdate({ user: req.user._id }, { items: [], totalAmount: 0 });
+
+    res.status(201).json(createdOrder);
+});
+
 export {
     getAllProducts,
     getProductById,
@@ -179,5 +205,6 @@ export {
     getCart,
     addToCart,
     updateCartItem,
-    removeFromCart
+    removeFromCart,
+    createOrder
 }; 

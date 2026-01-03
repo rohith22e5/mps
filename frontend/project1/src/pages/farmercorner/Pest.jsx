@@ -4,6 +4,7 @@ import Analysis from "./Analysis"
 import Recommendations from "./Recommendations"
 import image from "/4.jpg"
 import { useState,useEffect } from "react"
+import PYTHON_API_URL from "../../api/python.js"
 
 export default function Pest({login}){
     const [analysisData, setAnalysisData] = useState(null);
@@ -70,7 +71,7 @@ export default function Pest({login}){
         try {
           const crop = analysisData.crop.toLowerCase().replace(" ", "_");
           const disease = analysisData.disease.toLowerCase().replace(" ", "_");
-          const recoRes = await fetch(`http://localhost:8000/api/recommendation/${crop}/${disease}`);
+          const recoRes = await fetch(`${PYTHON_API_URL}/recommendation/${crop}/${disease}`);
 
           
           const recoJson = await recoRes.json();

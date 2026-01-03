@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../api/axios";
 import "./Cart.css";
 import { useShop } from '../context/ShopContext';
 import carrotImage from './product_images/Fresh Carrots.jpeg';
@@ -82,12 +82,12 @@ const Cart = () => {
   const testBackendConnectivity = async () => {
     try {
       // Check if the server is responding at all
-      const healthResponse = await axios.get('http://localhost:5000/health');
+      const healthResponse = await axios.get('/health', { baseURL: import.meta.env.VITE_API_BASE_URL });
       console.log('Backend health check:', healthResponse.data);
       setBackendStatus('online');
       
       // Try to get products (doesn't require auth)
-      const productsResponse = await axios.get('http://localhost:5000/api/shop/products');
+      const productsResponse = await axios.get('/shop/products');
       console.log('Products API response:', { 
         status: productsResponse.status, 
         count: productsResponse.data.length 
@@ -102,7 +102,7 @@ const Cart = () => {
               'Authorization': `Bearer ${token}`
             }
           };
-          const userTest = await axios.get('http://localhost:5000/api/auth/profile', config);
+          const userTest = await axios.get('/auth/profile', config);
           console.log('Auth check successful:', userTest.data.username || 'User verified');
         } catch (authError) {
           console.error('Auth check failed:', authError.response?.status, authError.response?.data);
@@ -168,7 +168,7 @@ const Cart = () => {
       };
 
       console.log('Fetching cart with token:', token ? 'Token exists' : 'No token');
-      const response = await axios.get('http://localhost:5000/api/shop/cart', config);
+      const response = await axios.get('/shop/cart', config);
       console.log('Cart response:', response.data);
       
       setCartItems(response.data.items || []);
@@ -224,7 +224,7 @@ const Cart = () => {
         }
       };
 
-      await axios.delete(`http://localhost:5000/api/shop/cart/items/${itemId}`, config);
+      await axios.delete(`/shop/cart/items/${itemId}`, config);
       
       // Update the cart items locally
       setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
@@ -293,7 +293,7 @@ const Cart = () => {
       }
 
       await axios.put(
-        `http://localhost:5000/api/shop/cart/items/${itemId}`, 
+        `/shop/cart/items/${itemId}`, 
         { quantity }, 
         config
       );
@@ -436,7 +436,7 @@ const Cart = () => {
       try {
         // Try server call with timeout
         const serverPromise = axios.post(
-          'http://localhost:5000/api/shop/orders',
+          '/shop/orders',
           orderData,
           {...config, timeout: 3000} // 3 second timeout
         );
@@ -470,7 +470,7 @@ const Cart = () => {
           // Try to clear items on server only if server call was successful
           for (const item of cartItems) {
             try {
-              await axios.delete(`http://localhost:5000/api/shop/cart/items/${item._id}`, config);
+              await axios.delete(`/shop/cart/items/${item._id}`, config);
             } catch (deleteError) {
               console.error('Error removing item from cart after order:', deleteError);
             }

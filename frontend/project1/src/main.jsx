@@ -1,10 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import axios from 'axios'
+import axiosInstance from './api/axios.js'
 import App from './App.jsx'
 
 // Configure global axios interceptors for authentication
-axios.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   response => response,
   error => {
     // Handle authentication errors globally

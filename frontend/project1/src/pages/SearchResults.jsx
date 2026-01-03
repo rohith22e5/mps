@@ -1,7 +1,7 @@
 import { useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ProductCard from "./ProductCard";
-import axios from "axios";
+import axios from "../api/axios";
 import "./Shop.css"; // Assuming you want similar styling
 
 export default function SearchResults() {
@@ -16,7 +16,7 @@ export default function SearchResults() {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get('http://localhost:5000/api/shop/products');
+                const response = await axios.get('/shop/products');
                 setProducts(response.data);
                 setLoading(false);
             } catch (err) {

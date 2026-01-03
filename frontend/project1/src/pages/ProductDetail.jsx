@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api/axios';
 import './ProductDetail.css';
 import { useShop } from '../context/ShopContext';
 
@@ -86,7 +86,7 @@ const ProductDetail = () => {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/shop/products/${productId}`);
+        const response = await axios.get(`/shop/products/${productId}`);
         setProduct(response.data);
         
         // Set default selected unit based on product type
@@ -188,7 +188,7 @@ const ProductDetail = () => {
       console.log('Sending cart data:', cartData);
       
       const response = await axios.post(
-        'http://localhost:5000/api/shop/cart/items', 
+        '/shop/cart/items', 
         cartData,
         config
       );

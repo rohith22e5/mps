@@ -4,6 +4,7 @@ import CroprecResults from "./CroprecResults";
 import CropRec from "./Crop";
 import IExa from "/5.jpg";
 import { useState, useEffect } from "react";
+import PYTHON_API_URL from "../../api/python.js";
 
 export default function CropRecommendation({ login }) {
   const fallbackAnalysis = {
@@ -58,7 +59,7 @@ export default function CropRecommendation({ login }) {
 
     const fetchData = async () => {
       try {
-        const cropRec = await fetch(`http://localhost:8000/api/croppred/recommendation`, {
+        const cropRec = await fetch(`${PYTHON_API_URL}/croppred/recommendation`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

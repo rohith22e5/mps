@@ -4,7 +4,7 @@ import "./Social.css";
 import NotificationBell from "./Social/Notification";
 import { Newspaper, MessageCircle, User } from "lucide-react";
 import { FaHome, FaRocket, FaUser } from "react-icons/fa";
-import axios from "axios";
+import axios from "../api/axios";
 
 export default function SocialLayout({login}) {
     // Check for login
@@ -37,16 +37,20 @@ export default function SocialLayout({login}) {
                 };
                 
                 // Fetch user profile from API
-                const userResponse = await axios.get("http://localhost:5000/api/auth/profile", config);
+                const userResponse = await axios.get("/auth/profile", config);
                 
                 if (userResponse.data) {
                     // Format user data
+                    const avatarUrl = userResponse.data.avatar
+                        ? (userResponse.data.avatar.startsWith('http') ? userResponse.data.avatar : `${import.meta.env.VITE_API_URL}${userResponse.data.avatar}`)
+                        : "/1.png";
+
                     const userData = {
                         _id: userResponse.data._id,
                         username: userResponse.data.username,
                         email: userResponse.data.email,
                         name: userResponse.data.username,
-                        avatar: userResponse.data.avatar || "/1.png",
+                        avatar: avatarUrl,
                         mobile: userResponse.data.mobile || "",
                         role: userResponse.data.role || "Farmer"
                     };

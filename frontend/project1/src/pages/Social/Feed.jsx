@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PostCard from "./PostCard";
 import "./Feed.css";
-import axios from "axios";
+import axios from "../../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import { UserPlus, Users, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -38,7 +38,7 @@ export default function FarmScene({login}) {
                 };
 
             // Fetch posts - we only want real posts, no dummy data
-                const postsResponse = await axios.get('http://localhost:5000/api/social/posts', config);
+                const postsResponse = await axios.get('/social/posts', config);
                 
                 // Process posts to determine if current user has liked them
                 const userId = localStorage.getItem('userId');
@@ -65,7 +65,7 @@ export default function FarmScene({login}) {
             }
 
             // Fetch followers - we'll treat all connections as followers
-            const followersResponse = await axios.get('http://localhost:5000/api/social/followers', config);
+            const followersResponse = await axios.get('/social/followers', config);
             
             // Process followers
             let followersList = [];
@@ -81,7 +81,7 @@ export default function FarmScene({login}) {
             }
 
             // Also fetch friends for backward compatibility, but treat them as followers
-            const friendsResponse = await axios.get('http://localhost:5000/api/social/friends', config);
+            const friendsResponse = await axios.get('/social/friends', config);
             
             // Process friends as followers
             let additionalFollowers = [];
@@ -126,7 +126,7 @@ export default function FarmScene({login}) {
             if (currentUserId) connectionIdSet.add(currentUserId);
 
             // Fetch all farmers suggestions (users of the app)
-            const suggestionsResponse = await axios.get('http://localhost:5000/api/social/friends/suggestions', config);
+            const suggestionsResponse = await axios.get('/social/friends/suggestions', config);
             if (suggestionsResponse.data && suggestionsResponse.data.length > 0) {
                 // Filter out any users that the current user is already following
                 const filteredFarmers = suggestionsResponse.data.filter(farmer => {
@@ -155,7 +155,7 @@ export default function FarmScene({login}) {
                 // For each shared post, fetch the sharer's information
                 const userPromises = sharedPosts.flatMap(post => 
                     post.sharedBy.map(share => 
-                        axios.get(`http://localhost:5000/api/social/profile/${share.user}`, config)
+                        axios.get(`/social/profile/${share.user}`, config)
                             .catch(err => ({ data: null })) // Catch errors for individual user fetches
                     )
                 );
@@ -229,7 +229,7 @@ export default function FarmScene({login}) {
             // Only handle real posts (those with MongoDB ObjectIDs)
             if (typeof postId === 'string' && postId.match(/^[0-9a-fA-F]{24}$/)) {
                 // Call API for real posts
-                const response = await axios.post(`http://localhost:5000/api/social/posts/${postId}/like`, {}, config);
+                const response = await axios.post(`/social/posts/${postId}/like`, {}, config);
                 
                 // Get the current user ID to check like status
                 const userId = localStorage.getItem('userId');
@@ -274,7 +274,7 @@ export default function FarmScene({login}) {
             if (typeof postId === 'string' && postId.match(/^[0-9a-fA-F]{24}$/)) {
                 // Call API for real posts
                 const response = await axios.post(
-                    `http://localhost:5000/api/social/posts/${postId}/comment`,
+                    `/social/posts/${postId}/comment`,
                     { text: commentText },
                     config
                 );
@@ -313,7 +313,7 @@ export default function FarmScene({login}) {
             if (typeof postId === 'string' && postId.match(/^[0-9a-fA-F]{24}$/)) {
                 // Call API to share post with the formatted connections
                 const response = await axios.post(
-                    `http://localhost:5000/api/social/posts/${postId}/share`,
+                    `/social/posts/${postId}/share`,
                     { sharedWith: formattedConnections },
                     config
                 );
@@ -351,7 +351,7 @@ export default function FarmScene({login}) {
             };
 
             // Fetch followers
-            const followersResponse = await axios.get('http://localhost:5000/api/social/followers', config);
+            const followersResponse = await axios.get('/social/followers', config);
             
             // Process followers
             let followersList = [];
@@ -379,7 +379,7 @@ export default function FarmScene({login}) {
             if (currentUserId) connectionIdSet.add(currentUserId);
 
             // Fetch all farmers suggestions
-            const suggestionsResponse = await axios.get('http://localhost:5000/api/social/friends/suggestions', config);
+            const suggestionsResponse = await axios.get('/social/friends/suggestions', config);
             
             if (suggestionsResponse.data && suggestionsResponse.data.length > 0) {
                 console.log(`Refreshed: Found ${suggestionsResponse.data.length} user suggestions`);
@@ -441,7 +441,7 @@ export default function FarmScene({login}) {
             };
 
             // Call the follow API endpoint
-            const response = await axios.post(`http://localhost:5000/api/social/follow/${userId}`, {}, config);
+            const response = await axios.post(`/social/follow/${userId}`, {}, config);
             
             if (response.data.success) {
                 console.log(`Successfully followed user: ${farmerToFollow.username}`, response.data);
@@ -451,7 +451,7 @@ export default function FarmScene({login}) {
                 
                 // Immediately get fresh suggestion list to maintain 10 users
                 try {
-                    const suggestionsResponse = await axios.get('http://localhost:5000/api/social/friends/suggestions', config);
+                    const suggestionsResponse = await axios.get('/social/friends/suggestions', config);
                     
                     if (suggestionsResponse.data && suggestionsResponse.data.length > 0) {
                         console.log(`Fetched ${suggestionsResponse.data.length} new user suggestions after follow action`);
@@ -529,7 +529,7 @@ export default function FarmScene({login}) {
             };
 
             // Call API to delete the post
-            const response = await axios.delete(`http://localhost:5000/api/social/posts/${postId}`, config);
+            const response = await axios.delete(`/social/posts/${postId}`, config);
             
             if (response.data.success) {
                 console.log(`Successfully deleted post: ${postId}`);

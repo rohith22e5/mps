@@ -6,7 +6,7 @@ import vid1 from "../videos/1.mp4"
 import Logo from "./Logo"
 import Veggif from "../videos/veg.gif"
 import "./styles.css"
-import axios from "axios"
+import axios from "../api/axios"
 
 const Login = ({login, setLogin, setUser}) => {
     const navigate = useNavigate();
@@ -50,7 +50,7 @@ const Login = ({login, setLogin, setUser}) => {
         setLoading(true);
         
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/login', {
+            const response = await axios.post('/auth/login', {
                 email,
                 password
             });
@@ -98,7 +98,7 @@ const Login = ({login, setLogin, setUser}) => {
             setError("");
             
             // Request Google OAuth URL from backend
-            const response = await axios.get("http://localhost:5000/api/auth/google/url");
+            const response = await axios.get("/auth/google/url");
             
             if (response.data && response.data.authUrl) {
                 console.log("Google OAuth data:", response.data);

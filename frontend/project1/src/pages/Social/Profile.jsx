@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link, useOutletContext } from "react-router-dom";
 import "./Profile.css";
-import axios from "axios";
+import axios from "../../api/axios";
 
 export default function SocialProfile() {
     const { username } = useParams();
@@ -35,12 +35,18 @@ export default function SocialProfile() {
         
         // Function to create a user object from API data
         const createUserObject = (authData, socialData = null) => {
+            const backendUrl = 'http://localhost:5000';
+            let profilePic = authData.avatar || "/1.png";
+            if (profilePic && !profilePic.startsWith('http')) {
+                profilePic = `${backendUrl}/${profilePic.replace(/\\/g, '/')}`;
+            }
+
             return {
                 _id: authData._id,
                 name: authData.username,
                 username: authData.username,
                 email: authData.email,
-                profilePic: authData.avatar || "/1.png",
+                profilePic: profilePic,
                 bio: socialData?.bio || "Farmer at FarmConnect",
                 farmLocation: socialData?.farmLocation || "India",
                 followers: socialData?.followers || 3,
@@ -96,7 +102,7 @@ export default function SocialProfile() {
                         // Get social profile data
                         let socialData = null;
                         try {
-                            const socialResponse = await axios.get("http://localhost:5000/api/social/profile/me", config);
+                            const socialResponse = await axios.get("/social/profile/me", config);
                             socialData = socialResponse.data;
                             console.log("Current user social data:", socialData);
                         } catch (socialErr) {
@@ -116,7 +122,7 @@ export default function SocialProfile() {
                     // Fetching another user's profile
                     try {
                         console.log(`Fetching profile for user: ${targetUsername}`);
-                        const response = await axios.get(`http://localhost:5000/api/social/profile/${targetUsername}`, config);
+                        const response = await axios.get(`/social/profile/${targetUsername}`, config);
                         
                         if (response.data) {
                             setUser(response.data);
@@ -125,7 +131,7 @@ export default function SocialProfile() {
                             // Check follow status for other users
                             try {
                                 const followResponse = await axios.get(
-                                    `http://localhost:5000/api/social/follow/status/${response.data._id || targetUsername}`, 
+                                    `/social/follow/status/${response.data._id || targetUsername}`, 
                                     config
                                 );
                                 setIsFollowing(followResponse.data.isFollowing);
@@ -170,9 +176,9 @@ export default function SocialProfile() {
             };
             
             if (isFollowing) {
-                await axios.post(`http://localhost:5000/api/social/unfollow/${user._id || user.username}`, {}, config);
+                await axios.post(`/social/unfollow/${user._id || user.username}`, {}, config);
             } else {
-                await axios.post(`http://localhost:5000/api/social/follow/${user._id || user.username}`, {}, config);
+                await axios.post(`/social/follow/${user._id || user.username}`, {}, config);
             }
             
             setIsFollowing(!isFollowing);
@@ -202,16 +208,23 @@ export default function SocialProfile() {
                 }
             };
             
-            const response = await axios.get(`http://localhost:5000/api/social/followers/${userId}`, config);
+            const response = await axios.get(`/social/followers/${userId}`, config);
             
             if (response.data && Array.isArray(response.data)) {
                 // Process follower data to ensure all needed fields
-                const processedFollowers = response.data.map(follower => ({
-                    ...follower,
-                    _id: follower._id || `follower-${Math.random()}`,
-                    username: follower.username || follower.name || "User",
-                    avatar: follower.avatar || follower.profilePic || "/1.png"
-                }));
+                const processedFollowers = response.data.map(follower => {
+                    const backendUrl = 'http://localhost:5000';
+                    let avatar = follower.avatar || follower.profilePic || "/1.png";
+                    if (avatar && !avatar.startsWith('http')) {
+                        avatar = `${backendUrl}/${avatar.replace(/\\/g, '/')}`;
+                    }
+                    return {
+                        ...follower,
+                        _id: follower._id || `follower-${Math.random()}`,
+                        username: follower.username || follower.name || "User",
+                        avatar: avatar
+                    };
+                });
                 setFollowers(processedFollowers);
             } else {
                 setFollowers([]);
@@ -239,16 +252,23 @@ export default function SocialProfile() {
                 }
             };
             
-            const response = await axios.get(`http://localhost:5000/api/social/following/${userId}`, config);
+            const response = await axios.get(`/social/following/${userId}`, config);
             
             if (response.data && Array.isArray(response.data)) {
                 // Process following data to ensure all needed fields
-                const processedFollowing = response.data.map(following => ({
-                    ...following,
-                    _id: following._id || `following-${Math.random()}`,
-                    username: following.username || following.name || "User",
-                    avatar: following.avatar || following.profilePic || "/1.png"
-                }));
+                const processedFollowing = response.data.map(following => {
+                    const backendUrl = 'http://localhost:5000';
+                    let avatar = following.avatar || following.profilePic || "/1.png";
+                    if (avatar && !avatar.startsWith('http')) {
+                        avatar = `${backendUrl}/${avatar.replace(/\\/g, '/')}`;
+                    }
+                    return {
+                        ...following,
+                        _id: following._id || `following-${Math.random()}`,
+                        username: following.username || following.name || "User",
+                        avatar: avatar
+                    };
+                });
                 setFollowing(processedFollowing);
             } else {
                 setFollowing([]);
@@ -285,7 +305,7 @@ export default function SocialProfile() {
                 }
             };
             
-            await axios.post(`http://localhost:5000/api/social/follow/${userId}`, {}, config);
+            await axios.post(`/social/follow/${userId}`, {}, config);
             
             // Refresh connections
             if (showFollowersModal) {
@@ -312,7 +332,7 @@ export default function SocialProfile() {
                 }
             };
             
-            await axios.post(`http://localhost:5000/api/social/unfollow/${userId}`, {}, config);
+            await axios.post(`/social/unfollow/${userId}`, {}, config);
             
             // Refresh connections
             if (showFollowersModal) {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./NewPost.css";
-import axios from "axios";
+import axios from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 
 export default function NewSocialPost() {
@@ -51,7 +51,7 @@ export default function NewSocialPost() {
             };
             
             const response = await axios.post(
-                'http://localhost:5000/api/social/posts',
+                '/social/posts',
                 postData,
                 config
             );

@@ -21,6 +21,7 @@ import {
     unfollowUser
 } from '../controllers/socialController.js';
 import Post from '../models/postModel.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -65,15 +66,15 @@ router.get('/debug/posts', protect, async (req, res) => {
         const userId = req.user._id;
         const username = req.user.username;
         
-        console.log(`Debug: Checking posts for user ${username} (${userId})`);
+        logger.debug(`Debug: Checking posts for user ${username} (${userId})`);
         
         // Check posts by user ID
         const postsByUserId = await Post.find({ user: userId });
-        console.log(`Found ${postsByUserId.length} posts by user ID`);
+        logger.debug(`Found ${postsByUserId.length} posts by user ID`);
         
         // Check posts by username
         const postsByUsername = await Post.find({ username });
-        console.log(`Found ${postsByUsername.length} posts by username`);
+        logger.debug(`Found ${postsByUsername.length} posts by username`);
         
         // Return details for debugging
         res.json({
@@ -93,7 +94,7 @@ router.get('/debug/posts', protect, async (req, res) => {
             }))
         });
     } catch (error) {
-        console.error('Debug route error:', error);
+        logger.error('Debug route error:', error);
         res.status(500).json({ error: error.message });
     }
 });

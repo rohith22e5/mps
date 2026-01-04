@@ -5,6 +5,7 @@ import User from '../models/userModel.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -67,7 +68,7 @@ router.post('/update-profile-image', protect, upload.single('profileImage'), asy
       avatar: avatar
     });
   } catch (error) {
-    console.error('Error updating profile image:', error);
+    logger.error('Error updating profile image:', error);
     res.status(500).json({
       success: false,
       message: 'Error updating profile image'

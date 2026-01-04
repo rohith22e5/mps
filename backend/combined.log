@@ -537,3 +537,24 @@
 {"headers":{"accept":"application/json, text/plain, */*","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9,te;q=0.8,hi;q=0.7","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjI1M2Q0ZTE1MDVmZWQxMWU1MmNiZiIsImlhdCI6MTc2NzEwOTgxNywiZXhwIjoxNzY5NzAxODE3fQ.C2DMb3HmPNBITAUQ4BrEtVIDnz2pkMjMhdzbASId1QM","connection":"keep-alive","host":"localhost:5000","origin":"http://localhost:5173","referer":"http://localhost:5173/","sec-ch-ua":"\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"","sec-ch-ua-mobile":"?0","sec-ch-ua-platform":"\"Linux\"","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"same-site","user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"},"level":"info","message":"GET /api/shop/orders"}
 {"headers":{"accept":"image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9,te;q=0.8,hi;q=0.7","connection":"keep-alive","host":"localhost:5000","if-modified-since":"Fri, 02 Jan 2026 17:08:48 GMT","if-none-match":"W/\"37eb-19b7faeeba5\"","referer":"http://localhost:5173/","sec-ch-ua":"\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"","sec-ch-ua-mobile":"?0","sec-ch-ua-platform":"\"Linux\"","sec-fetch-dest":"image","sec-fetch-mode":"no-cors","sec-fetch-site":"same-site","user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"},"level":"info","message":"GET /uploads/profiles/profile-1767373728675-619304573.png"}
 {"headers":{"accept":"application/json, text/plain, */*","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9,te;q=0.8,hi;q=0.7","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjI1M2Q0ZTE1MDVmZWQxMWU1MmNiZiIsImlhdCI6MTc2NzEwOTgxNywiZXhwIjoxNzY5NzAxODE3fQ.C2DMb3HmPNBITAUQ4BrEtVIDnz2pkMjMhdzbASId1QM","connection":"keep-alive","host":"localhost:5000","if-none-match":"W/\"141-17Qp4DkAOCyVSkRWB1a1Ajj6MZk\"","origin":"http://localhost:5173","referer":"http://localhost:5173/","sec-ch-ua":"\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"","sec-ch-ua-mobile":"?0","sec-ch-ua-platform":"\"Linux\"","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"same-site","user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"},"level":"info","message":"GET /api/products"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}
+{"level":"info","message":"Server running in development mode on port 5000"}

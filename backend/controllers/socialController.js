@@ -4,6 +4,7 @@ import User from '../models/userModel.js';
 import Friend from '../models/friendModel.js';
 import mongoose from 'mongoose';
 import Follow from '../models/followModel.js';
+import logger from '../config/logger.js';
 
 // @desc    Create a new post
 // @route   POST /api/social/posts
@@ -58,7 +59,7 @@ const getPosts = asyncHandler(async (req, res) => {
             message: `Found ${posts.length} posts from all users in the community feed.`
         });
     } catch (error) {
-        console.error('Error fetching posts:', error);
+        logger.error('Error fetching posts:', error);
         res.status(500);
         throw new Error('Failed to fetch posts. Please try again.');
     }
@@ -318,7 +319,7 @@ const getSharedPosts = asyncHandler(async (req, res) => {
                             sharerUsername = sharerUser.username;
                         }
                     } catch (err) {
-                        console.error("Error fetching sharer user:", err);
+                        logger.error("Error fetching sharer user:", err);
                     }
                 }
             }
@@ -348,7 +349,7 @@ const getSharedPosts = asyncHandler(async (req, res) => {
         
         res.json({ sharedPosts: formattedSharedPosts });
     } catch (error) {
-        console.error("Error fetching shared posts:", error);
+        logger.error("Error fetching shared posts:", error);
         res.status(500);
         throw new Error("Failed to fetch shared posts");
     }
@@ -359,7 +360,7 @@ const getSharedPosts = asyncHandler(async (req, res) => {
 // @access  Private
 const getFriendSuggestions = asyncHandler(async (req, res) => {
     try {
-        console.log(`Getting friend suggestions for user ID: ${req.user._id}`);
+        logger.debug(`Getting friend suggestions for user ID: ${req.user._id}`);
         
         // Get existing friend relationships
         const existingFriendships = await Friend.find({
@@ -374,7 +375,7 @@ const getFriendSuggestions = asyncHandler(async (req, res) => {
             follower: req.user._id
         });
         
-        console.log(`Found ${existingFriendships.length} friend relationships and ${existingFollows.length} follow relationships`);
+        logger.debug(`Found ${existingFriendships.length} friend relationships and ${existingFollows.length} follow relationships`);
         
         // Extract IDs of users that already have a relationship with the current user
         const existingFriendIds = new Set();
@@ -396,7 +397,7 @@ const getFriendSuggestions = asyncHandler(async (req, res) => {
         // Add current user ID to exclude from suggestions
         existingFriendIds.add(req.user._id.toString());
         
-        console.log(`Excluding ${existingFriendIds.size} users from suggestions`);
+        logger.debug(`Excluding ${existingFriendIds.size} users from suggestions`);
         
         // Find users not already connected with the current user
         const suggestions = await User.find({
@@ -405,11 +406,11 @@ const getFriendSuggestions = asyncHandler(async (req, res) => {
         .select('_id username avatar')
         .limit(30);
         
-        console.log(`Returning ${suggestions.length} user suggestions`);
+        logger.debug(`Returning ${suggestions.length} user suggestions`);
         
         res.json(suggestions);
     } catch (error) {
-        console.error('Error in getFriendSuggestions:', error);
+        logger.error('Error in getFriendSuggestions:', error);
         res.status(500).json({
             message: 'Error getting friend suggestions',
             error: error.message
@@ -566,7 +567,7 @@ const getFollowers = asyncHandler(async (req, res) => {
             res.json([]);
         }
     } catch (error) {
-        console.error('Error fetching followers:', error);
+        logger.error('Error fetching followers:', error);
         res.status(500);
         throw new Error('Failed to fetch followers');
     }
@@ -603,7 +604,7 @@ const getFollowing = asyncHandler(async (req, res) => {
             res.json([]);
         }
     } catch (error) {
-        console.error('Error fetching following:', error);
+        logger.error('Error fetching following:', error);
         res.status(500);
         throw new Error('Failed to fetch following list');
     }
@@ -615,18 +616,18 @@ const getFollowing = asyncHandler(async (req, res) => {
 const getUserProfile = asyncHandler(async (req, res) => {
     const { username } = req.params;
     
-    console.log(`Fetching profile for username: ${username}`);
+    logger.debug(`Fetching profile for username: ${username}`);
     
     // Handle 'me' to get the current user's profile
     if (username === 'me') {
-        console.log('Fetching current user profile');
+        logger.debug('Fetching current user profile');
         const currentUser = await User.findById(req.user._id);
         if (!currentUser) {
             res.status(404);
             throw new Error('User not found');
         }
         
-        console.log(`Found current user: ${currentUser.username}`);
+        logger.debug(`Found current user: ${currentUser.username}`);
         
         // Get user's posts - only fetch non-deleted posts
         const posts = await Post.find({ 
@@ -634,17 +635,17 @@ const getUserProfile = asyncHandler(async (req, res) => {
             deleted: { $ne: true } // Only get posts that are not deleted
         }).sort({ createdAt: -1 });
             
-        console.log(`Found ${posts.length} posts for current user`);
+        logger.debug(`Found ${posts.length} posts for current user`);
         
         // If no posts by ID, try by username
         if (posts.length === 0) {
-            console.log('No posts found by ID, trying by username');
+            logger.debug('No posts found by ID, trying by username');
             const usernameBasedPosts = await Post.find({ 
                 username: currentUser.username,
                 deleted: { $ne: true } // Only get posts that are not deleted
             }).sort({ createdAt: -1 });
                 
-            console.log(`Found ${usernameBasedPosts.length} posts by username`);
+            logger.debug(`Found ${usernameBasedPosts.length} posts by username`);
             
             if (usernameBasedPosts.length > 0) {
                 posts.push(...usernameBasedPosts);
@@ -676,16 +677,16 @@ const getUserProfile = asyncHandler(async (req, res) => {
     }
     
     // Find user by username
-    console.log(`Finding user by username: ${username}`);
+    logger.debug(`Finding user by username: ${username}`);
     const user = await User.findOne({ username });
     
     if (!user) {
-        console.log(`User not found: ${username}`);
+        logger.debug(`User not found: ${username}`);
         res.status(404);
         throw new Error('User not found');
     }
     
-    console.log(`Found user: ${user.username} with ID: ${user._id}`);
+    logger.debug(`Found user: ${user.username} with ID: ${user._id}`);
     
     // Get user's posts - only fetch non-deleted posts
     const posts = await Post.find({ 
@@ -693,17 +694,17 @@ const getUserProfile = asyncHandler(async (req, res) => {
         deleted: { $ne: true } // Only get posts that are not deleted
     }).sort({ createdAt: -1 });
         
-    console.log(`Found ${posts.length} posts for user by ID`);
+    logger.debug(`Found ${posts.length} posts for user by ID`);
     
     // If no posts by ID, try by username
     if (posts.length === 0) {
-        console.log('No posts found by ID, trying by username');
+        logger.debug('No posts found by ID, trying by username');
         const usernameBasedPosts = await Post.find({ 
             username: user.username,
             deleted: { $ne: true } // Only get posts that are not deleted
         }).sort({ createdAt: -1 });
             
-        console.log(`Found ${usernameBasedPosts.length} posts by username`);
+        logger.debug(`Found ${usernameBasedPosts.length} posts by username`);
         
         if (usernameBasedPosts.length > 0) {
             posts.push(...usernameBasedPosts);
@@ -846,7 +847,7 @@ const followUser = asyncHandler(async (req, res) => {
             followId: newFollow._id
         });
     } catch (error) {
-        console.error('Error in followUser controller:', error);
+        logger.error('Error in followUser controller:', error);
         return res.status(500).json({
             success: false,
             message: 'Server error while following user',
@@ -917,17 +918,17 @@ const deletePost = asyncHandler(async (req, res) => {
         
         // First find all shared versions of this post and delete them completely
         const sharedPosts = await Post.find({ originalPostId: post._id });
-        console.log(`Found ${sharedPosts.length} shared versions of this post to delete`);
+        logger.debug(`Found ${sharedPosts.length} shared versions of this post to delete`);
         
         // Delete all shared posts
         if (sharedPosts.length > 0) {
             await Post.deleteMany({ originalPostId: post._id });
-            console.log(`Deleted ${sharedPosts.length} shared versions of the post`);
+            logger.debug(`Deleted ${sharedPosts.length} shared versions of the post`);
         }
         
         // Then delete the original post completely
         await Post.findByIdAndDelete(req.params.id);
-        console.log(`Deleted original post with ID: ${req.params.id}`);
+        logger.info(`Deleted original post with ID: ${req.params.id}`);
         
         res.json({ 
             success: true, 
@@ -935,7 +936,7 @@ const deletePost = asyncHandler(async (req, res) => {
             postId: post._id
         });
     } catch (error) {
-        console.error('Error deleting post:', error);
+        logger.error('Error deleting post:', error);
         res.status(error.statusCode || 500);
         throw new Error(error.message || 'Failed to delete post');
     }

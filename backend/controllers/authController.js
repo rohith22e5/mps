@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import logger from '../config/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,7 +31,7 @@ const generateToken = (id) => {
 const getGoogleAuthURL = asyncHandler(async (req, res) => {
     // Check if Google OAuth credentials are available
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_REDIRECT_URL) {
-        console.error('Missing Google OAuth credentials in environment variables');
+        logger.error('Missing Google OAuth credentials in environment variables');
         res.status(500);
         throw new Error('Server configuration error: Google OAuth is not properly configured');
     }
@@ -57,7 +58,7 @@ const getGoogleAuthURL = asyncHandler(async (req, res) => {
     const authUrl = `${baseUrl}?${urlParams.toString()}`;
     
     // Log the URL for debugging
-    console.log('Generated Google Auth URL:', authUrl);
+    logger.debug('Generated Google Auth URL:', authUrl);
     
     // Parse URL to check if required parameters are included
     const urlObj = new URL(authUrl);
@@ -66,15 +67,15 @@ const getGoogleAuthURL = asyncHandler(async (req, res) => {
     const hasResponseType = urlObj.searchParams.has('response_type');
     
     if (!hasRedirectUri) {
-        console.warn('Warning: redirect_uri not included in Google Auth URL');
+        logger.warn('Warning: redirect_uri not included in Google Auth URL');
     }
     
     if (!hasClientId) {
-        console.warn('Warning: client_id not included in Google Auth URL');
+        logger.warn('Warning: client_id not included in Google Auth URL');
     }
     
     if (!hasResponseType) {
-        console.warn('Warning: response_type not included in Google Auth URL');
+        logger.warn('Warning: response_type not included in Google Auth URL');
     }
 
     res.json({ 
@@ -89,8 +90,8 @@ const googleCallback = asyncHandler(async (req, res) => {
     const { code } = req.query;
     const { state } = req.query;
     
-    console.log('Google OAuth callback received with code:', code ? 'Code present' : 'No code');
-    console.log('Query parameters:', req.query);
+    logger.debug('Google OAuth callback received with code:', code ? 'Code present' : 'No code');
+    logger.debug('Query parameters:', req.query);
     
     if (!code) {
         res.status(400);
@@ -98,8 +99,8 @@ const googleCallback = asyncHandler(async (req, res) => {
     }
     
     try {
-        console.log('Received authorization code, exchanging for tokens');
-        console.log('Using redirect URI:', process.env.GOOGLE_REDIRECT_URL);
+        logger.debug('Received authorization code, exchanging for tokens');
+        logger.debug('Using redirect URI:', process.env.GOOGLE_REDIRECT_URL);
         
         // Use a more direct approach for token exchange
         const tokenUrl = 'https://oauth2.googleapis.com/token';
@@ -111,7 +112,7 @@ const googleCallback = asyncHandler(async (req, res) => {
             grant_type: 'authorization_code'
         });
         
-        console.log('Token request parameters:', {
+        logger.debug('Token request parameters:', {
             code: 'REDACTED',
             client_id: process.env.GOOGLE_CLIENT_ID,
             redirect_uri: process.env.GOOGLE_REDIRECT_URL,
@@ -129,15 +130,15 @@ const googleCallback = asyncHandler(async (req, res) => {
         
         if (!tokenResponse.ok) {
             const errorData = await tokenResponse.json().catch(() => ({}));
-            console.error('Token exchange failed:', tokenResponse.status, errorData);
+            logger.error('Token exchange failed:', { status: tokenResponse.status, errorData });
             throw new Error(`Token exchange failed: ${errorData.error || tokenResponse.statusText}`);
         }
         
         const tokens = await tokenResponse.json();
-        console.log('Successfully exchanged code for tokens:', Object.keys(tokens).join(', '));
+        logger.debug('Successfully exchanged code for tokens:', Object.keys(tokens).join(', '));
         
         if (!tokens.id_token) {
-            console.error('No ID token received in the tokens response');
+            logger.error('No ID token received in the tokens response');
             throw new Error('Invalid token response from Google');
         }
         
@@ -149,26 +150,26 @@ const googleCallback = asyncHandler(async (req, res) => {
         });
         
         if (!userInfoResponse.ok) {
-            console.error('Failed to fetch user info:', userInfoResponse.status);
+            logger.error('Failed to fetch user info:', { status: userInfoResponse.status });
             throw new Error('Failed to fetch user information from Google');
         }
         
         const userData = await userInfoResponse.json();
         
         if (!userData.email) {
-            console.error('Invalid user data:', userData);
+            logger.error('Invalid user data from Google:', userData);
             throw new Error('Failed to extract user information');
         }
         
         const { email, name, picture, sub } = userData;
-        console.log(`User authenticated: ${email}`);
+        logger.debug(`User authenticated via Google: ${email}`);
         
         // Check if user exists in our database
         let user = await User.findOne({ email });
         
         // If user doesn't exist, create a new one
         if (!user) {
-            console.log(`Creating new user for: ${email}`);
+            logger.debug(`Creating new user for: ${email}`);
             // Generate a random password for Google users
             const password = Math.random().toString(36).slice(-8);
             
@@ -200,7 +201,7 @@ const googleCallback = asyncHandler(async (req, res) => {
                     fs.writeFileSync(imagePath, response.data);
                     avatarPath = `/uploads/profiles/${filename}`;
                 } catch (error) {
-                    console.error('Failed to download Google profile picture:', error);
+                    logger.error('Failed to download Google profile picture:', error);
                 }
             }
             
@@ -213,7 +214,7 @@ const googleCallback = asyncHandler(async (req, res) => {
                 isGoogleUser: true
             });
         } else if (!user.isGoogleUser) {
-            console.log(`Linking existing user with Google: ${email}`);
+            logger.debug(`Linking existing user with Google: ${email}`);
             // If a user with this email exists but is not a Google user,
             // update their account to link with Google
             user.googleId = sub;
@@ -227,12 +228,12 @@ const googleCallback = asyncHandler(async (req, res) => {
                     fs.writeFileSync(imagePath, response.data);
                     user.avatar = `/uploads/profiles/${filename}`;
                 } catch (error) {
-                    console.error('Failed to download Google profile picture:', error);
+                    logger.error('Failed to download Google profile picture:', error);
                 }
             }
             await user.save();
         } else {
-            console.log(`Existing Google user logged in: ${email}`);
+            logger.debug(`Existing Google user logged in: ${email}`);
         }
         
         // Create JWT token for our app
@@ -246,16 +247,16 @@ const googleCallback = asyncHandler(async (req, res) => {
                 redirectUrl = stateObj.redirectUrl || redirectUrl;
             }
         } catch (err) {
-            console.error('Error parsing state:', err);
+            logger.error('Error parsing state:', err);
         }
         
-        console.log(`Redirecting to frontend: ${redirectUrl}/oauth/callback`);
+        logger.debug(`Redirecting to frontend: ${redirectUrl}/oauth/callback`);
         
         // Redirect to frontend with token
         res.redirect(`${redirectUrl}/oauth/callback?token=${token}&userId=${user._id}`);
         
     } catch (error) {
-        console.error('Google OAuth Callback Error:', error);
+        logger.error('Google OAuth Callback Error:', error);
         
         // Send detailed error to frontend for debugging
         const redirectUrl = process.env.FRONTEND_URL;
@@ -381,7 +382,7 @@ const loginUser = asyncHandler(async (req, res) => {
 const googleLogin = asyncHandler(async (req, res) => {
     const { idToken } = req.body;
     
-    console.log('Google login attempt with token:', idToken ? 'Token provided' : 'No token');
+    logger.debug('Google login attempt with token:', idToken ? 'Token provided' : 'No token');
     
     if (!idToken) {
         res.status(400);
@@ -408,9 +409,9 @@ const googleLogin = asyncHandler(async (req, res) => {
             picture = payload.picture;
             sub = payload.sub;
             
-            console.log('Successfully verified ID token');
+            logger.debug('Successfully verified ID token');
         } catch (tokenError) {
-            console.error('ID token verification failed, trying as access token:', tokenError);
+            logger.error('ID token verification failed, trying as access token:', tokenError);
             
             // If ID token verification fails, try as an access token
             try {
@@ -428,9 +429,9 @@ const googleLogin = asyncHandler(async (req, res) => {
                 picture = userData.picture;
                 sub = userData.sub;
                 
-                console.log('Successfully fetched user info with access token');
+                logger.debug('Successfully fetched user info with access token');
             } catch (accessTokenError) {
-                console.error('Access token verification failed:', accessTokenError);
+                logger.error('Access token verification failed:', accessTokenError);
                 throw new Error('Invalid Google token - failed both ID and access token verification');
             }
         }
@@ -471,7 +472,7 @@ const googleLogin = asyncHandler(async (req, res) => {
                     fs.writeFileSync(imagePath, response.data);
                     avatarPath = `/uploads/profiles/${filename}`;
                 } catch (error) {
-                    console.error('Failed to download Google profile picture:', error);
+                    logger.error('Failed to download Google profile picture:', error);
                 }
             }
             
@@ -484,7 +485,7 @@ const googleLogin = asyncHandler(async (req, res) => {
                 isGoogleUser: true
             });
             
-            console.log('Created new user via Google login:', email);
+            logger.debug('Created new user via Google login:', email);
         } else if (!user.isGoogleUser) {
             // If a user with this email exists but is not a Google user,
             // update their account to link with Google
@@ -499,14 +500,14 @@ const googleLogin = asyncHandler(async (req, res) => {
                     fs.writeFileSync(imagePath, response.data);
                     user.avatar = `/uploads/profiles/${filename}`;
                 } catch (error) {
-                    console.error('Failed to download Google profile picture:', error);
+                    logger.error('Failed to download Google profile picture:', error);
                 }
             }
             await user.save();
             
-            console.log('Linked existing user to Google login:', email);
+            logger.debug('Linked existing user to Google login:', email);
         } else {
-            console.log('Existing Google user logged in:', email);
+            logger.debug('Existing Google user logged in:', email);
         }
         
         // Create token
@@ -529,7 +530,7 @@ const googleLogin = asyncHandler(async (req, res) => {
             token
         });
     } catch (error) {
-        console.error('Google OAuth Error:', error);
+        logger.error('Google OAuth Error:', error);
         res.status(401);
         throw new Error('Invalid Google token or authorization failed');
     }

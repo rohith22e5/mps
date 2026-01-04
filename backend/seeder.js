@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import User from './models/userModel.js';
 import Product from './models/productModel.js';
 import connectDB from './config/db.js';
+import logger from './config/logger.js';
 
 dotenv.config();
 
@@ -82,10 +83,10 @@ const importData = async () => {
         // Insert new data
         await Product.insertMany(products);
         
-        console.log('Data imported successfully!');
+        logger.info('Data imported successfully!');
         process.exit();
     } catch (error) {
-        console.error(`Error importing data: ${error.message}`);
+        logger.error(`Error importing data: ${error.message}`, error);
         process.exit(1);
     }
 };
@@ -96,10 +97,10 @@ const destroyData = async () => {
         // Delete all existing data
         await Product.deleteMany();
         
-        console.log('Data destroyed successfully!');
+        logger.info('Data destroyed successfully!');
         process.exit();
     } catch (error) {
-        console.error(`Error deleting data: ${error.message}`);
+        logger.error(`Error deleting data: ${error.message}`, error);
         process.exit(1);
     }
 };
